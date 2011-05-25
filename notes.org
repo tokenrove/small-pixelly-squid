@@ -1,0 +1,70 @@
+
+* Tasks
+- [X] new leads to new pane with creation wizard
+  - [X] berzerk level project:
+    - tile dimension (fixed at 16, disabled)
+    - room dimensons (fixed at 20x13, disabled)
+- [X] embed filechooser in notebook pane
+      - open leads to new pane with file chooser
+- [X] try an IconView for the palette widget
+- [X] load slab, split into palette entries
+
+- [X] externalize level data from Berzerk
+- [ ] load and display in SPS
+** Level editing:
+- [ ] move rooms on an infinite grid
+- [ ] add/remove/duplicate rooms
+- [ ] switch to room editor mode (edit fn)
+** room editing
+- [ ] game-independent map editor mode
+  - [ ] mortimer from PNG
+  - [ ] blank slate
+- [ ] old Animosity format
+
+
+- [X] new panel calls mode.NewPanelOptions which is linked with OK
+  button
+- [X] use gtk.TreeModel for new panel selector
+- [X] simple manual table of modes initially
+- [X] open panel runs autodetect routines which run in order of
+  precision (magic data vs filename)
+- [X] add a simple image mode as a test
+
+- [ ] berzerk level editor can use tilemap preview generation routine
+  to make images from indv. room maps, then place those images on the canvas
+
+- [ ] generic grid editor
+- [ ] add simple zoom control (popup slider on Z with focus grabbed)
+
+- [ ] modifier keys for drawing behavior:
+  - shift/control as concept of remove/add, so paint
+    transparency/alternate selection perhaps
+- [ ] right click for context menu
+
+
+
+Berzerk level format:
+ - magic
+ - array of rooms
+   - dimensions (should be 20x13)
+   - map (1D array of integers)
+   - slab (filename)
+   - tile properties (tile, propmask pairs)
+   - actors
+   - connections (array of (facing,room idx) pairs)
+
+_MAGIC = 'Berzerk'
+level = {
+ 'rooms': [
+   {'dim': (20,13),
+    'map': [],
+    'slab': 'foo.png',
+    'tile properties': [(0,1),(1,1)],
+    'actors': [('humanoid', (50,50))]
+    'connections': [(1,1)], }
+ ]
+}
+
+* Wishlist
+- [ ] Hints for autodetect routine on how expensive a predicate is;
+  sort autodetect list by estimated predicate cost
