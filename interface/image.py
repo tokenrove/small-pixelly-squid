@@ -1,22 +1,7 @@
-import gtk, goocanvas, os
-
-from interface import model
-
-class Model(model.Model):
-    def __init__(self, name=None, path=None, dimensions=(1,1), **kwds):
-        model.Model.__init__(self, **kwds)
-        self.path = path
-        self.dimensions = dimensions
-        self.name = name
-        if self.name is None: self.name = '*unnamed*' if path is None else os.path.basename(path)
-        if path is not None:
-            self.pixbuf = gtk.gdk.pixbuf_new_from_file(path)
-            self.dimensions = (self.pixbuf.get_width(), self.pixbuf.get_height())
-        else:
-            self.pixbuf = gtk.gdk.Pixbuf(gtk.gdk.COLORSPACE_RGB, True, 8, dimensions[0], dimensions[1])
-
-
+import gtk, goocanvas
+import editor.image
 from interface import panel
+
 class Panel(panel.Panel):
     def __init__(self, toplevel=None, model=None, **kwds):
         panel.Panel.__init__(self)
@@ -58,11 +43,6 @@ class Panel(panel.Panel):
 
     has_unsaved_changes = property(lambda self: self.model.has_unsaved_changes)
 
-import re
-def autodetect(path):
-    return re.match(r'(?i)\.png$', os.path.splitext(path)[1]) is not None
-
-
 def new_options():
     vbox = gtk.VBox()
 
@@ -79,9 +59,7 @@ def new_options():
     hbox.pack_end(w, expand=False)
     vbox.pack_start(hbox, expand=False)
 
-    return (vbox, lambda **kwds:Panel(model=Model(dimensions=(int(w.get_text()), int(h.get_text()))), **kwds))
-
-
+    return (vbox, lambda **kwds:Panel(model=editor.image.Model(dimensions=(int(w.get_text()), int(h.get_text()))), **kwds))
 
 def preview_fn(path):
     try:
@@ -93,5 +71,5 @@ def preview_fn(path):
         return None
 
 from interface import modes
-modes.register(['Image'], new_options, autodetect,
-               lambda path=None, **kwds: Panel(model=Model(path=path)), preview_fn)
+modes.register(['Image'], new_options, editor.image.autodetect,
+               lambda path=None, **kwds: Panel(model=editor.image.Model(path=path)), preview_fn)

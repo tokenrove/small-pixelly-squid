@@ -1,56 +1,7 @@
 import gtk, goocanvas
-import re, cPickle, os
+import editor.griefenzerk
+from interface import panel, tilemap
 
-from interface import model
-
-class LevelModel(model.Model):
-    def __init__(self, name=None, path=None, rooms=None, **kwds):
-        model.Model.__init__(self, **kwds)
-        self.path, self.name, self.rooms = path, name, rooms
-        if self.name is None: self.name = '*unnamed*' if path is None else os.path.basename(path)
-        if self.rooms == None: self.rooms = []
-
-    @classmethod
-    def load(cls, path):
-        with open(path) as f:
-            level = cPickle.load(f)
-        if level['magic'] != 'Berzerk': return None
-        return LevelModel(path=path, rooms = level['rooms'])
-
-    def save(self):
-        if not self.path:
-            print 'no path! implement save-as...'
-            return
-        try:
-            with open(path, "w") as f:
-                cPickle.dump({'magic':'Berzerk', 'rooms':self.rooms}, f)
-            self.has_unsaved_changes = False
-        except IOError: return
-
-from interface import tilemap
-
-class RoomModel(tilemap.GenericModel):
-    def __init__(self, parent=None, id=None, **kwds):
-        tilemap.GenericModel.__init__(self, **kwds)
-        self.parent = parent
-        self.id = id
-
-    @classmethod
-    def from_room(cls, parent, id):
-        room = parent.rooms[id]
-        name = '%s [%d]' % (parent.name,id)
-        return cls(name=name, parent=parent, id=id,
-                   dimensions=room['dim'], grid_size=(16,16), map=room['map'],
-                   slab_path=os.path.join(os.path.dirname(parent.path), room['slab']))
-
-    def save(self): self.parent.save()
-
-    def _propagate_unsaved_changes(self, v):
-        if v is False: self.parent.has_unsaved_changes = v
-    has_unsaved_changes = property(lambda self:self.parent.has_unsaved_changes,
-                                   _propagate_unsaved_changes)
-
-from interface import panel
 class Panel(panel.Panel):
     def __init__(self, toplevel=None, model=None, **kwds):
         panel.Panel.__init__(self)
@@ -126,11 +77,11 @@ class Panel(panel.Panel):
             print r.model.id
 
         for panel in self.subpanels:
-            if isinstance(panel.model, RoomModel) and panel.model.id == id:
+            if isinstance(panel.model, editor.griefenzerk.RoomModel) and panel.model.id == id:
                 self.toplevel.switch_to(panel)
                 return
 
-        model = RoomModel.from_room(parent=self.model, id=id)
+        model = editor.griefenzerk.RoomModel.from_room(parent=self.model, id=id)
         self.subpanels.append(tilemap.Panel(model=model, toplevel=self.toplevel))
         self.toplevel.append_panel(self.subpanels[-1])
 
@@ -139,19 +90,15 @@ class Panel(panel.Panel):
         for b in self.item_buttons:
             b.set_sensitive(path is not None)
 
+    def save(self):
+        self.model.save()
+
     @property
     def has_unsaved_changes(self):
         return self.model.has_unsaved_changes or any(x.has_unsaved_changes for x in self.subpanels)
 
 
-def autodetect(path):
-    if re.match(r'(?i)\.lev$', os.path.splitext(path)[1]) is None: return False
-    with open(path) as f:
-        try:
-            level = cPickle.load(f)
-            return level['magic'] == 'Berzerk'
-        except: return False
-
+import cPickle
 def preview_fn(path):
     with open(path) as f:
         level = cPickle.load(f)
@@ -159,6 +106,7 @@ def preview_fn(path):
 
 from interface import modes
 modes.register(['Level', 'Griefenzerk'],
-               modes.no_options(lambda **kwds:Panel(model=LevelModel(), **kwds)),
-               autodetect, lambda path=None,**kwds:Panel(model=LevelModel.load(path), **kwds),
+               modes.no_options(lambda **kwds:Panel(model=editor.griefenzerk.LevelModel(), **kwds)),
+               editor.griefenzerk.autodetect,
+               lambda path=None,**kwds:Panel(model=editor.griefenzerk.LevelModel.load(path), **kwds),
                preview_fn)

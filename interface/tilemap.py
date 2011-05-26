@@ -1,37 +1,7 @@
-
-import gtk, goocanvas, os, operator, array
-
-from interface import rastermap
-
-class GenericModel(rastermap.Model):
-    def __init__(self, map=None, slab_path=None, **kwds):
-        rastermap.Model.__init__(self, **kwds)
-        self.slab_path = slab_path
-        if self.slab_path is not None:
-            self.slab = gtk.gdk.pixbuf_new_from_file(self.slab_path)
-        else:
-            self.slab = gtk.gdk.Pixbuf(gtk.gdk.COLORSPACE_RGB, False, 8, 256, self.grid_size[1])
-
-        self.map = map
-        if self.map is None:
-            self.map = array.array('i', [0]*reduce(operator.mul, self.dimensions))
-
-        def extract_tile(n):
-            return self.slab.subpixbuf(n*self.grid_size[0], 0, self.grid_size[0], self.grid_size[1])
-        zero = extract_tile(0)
-        self.palette = [extract_tile(x) for x in range(0,self.slab.get_width()/self.grid_size[0])]
-
-    @classmethod
-    def load(cls, path):
-        # XXX wrong, bad, etc
-        it = cls()
-        return it
-
-    def save(self):
-        self.has_unsaved_changes = False
-        pass
-
+import gtk, goocanvas
+import editor.tilemap
 from interface import panel
+
 class Panel(panel.Panel):
     def __init__(self, toplevel=None, model=None, **kwds):
         panel.Panel.__init__(self)
@@ -184,17 +154,13 @@ def generic_tilemap_new_panel_options():
 
     def ctor(**kwds):
         if tabula_rasa_btn.get_active():
-            model = GenericModel(dimensions=(int(w.get_text()), int(h.get_text())), grid_size=(int(tw.get_text()), int(th.get_text())))
+            model = editor.tilemap.GenericModel(dimensions=(int(w.get_text()), int(h.get_text())), grid_size=(int(tw.get_text()), int(th.get_text())))
         else:
             print 'mortimer not ready.'
             assert False
         return Panel(model=model, **kwds)
     return (vbox, ctor)
 
-import re
-def autodetect(path):
-    return re.match(r'(?i)\.map$', os.path.splitext(path)[1]) is not None
-
 from interface import modes
-modes.register(['Tilemap'], generic_tilemap_new_panel_options, autodetect,
-               lambda path=None,**kwds:Panel(model=Model.load(path),**kwds), None)
+modes.register(['Tilemap'], generic_tilemap_new_panel_options, editor.tilemap.autodetect,
+               lambda path=None,**kwds:Panel(model=editor.tilemap.GenericModel.load(path),**kwds), None)

@@ -1,5 +1,5 @@
 
-from interface import model
+from editor import model
 
 class Model(model.Model):
     def __init__(self, dimensions=(1,1), grid_size=(1,1), **kwds):
