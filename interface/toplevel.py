@@ -13,8 +13,10 @@ class TopLevel(gtk.Window):
 
     def quit_request(self, *args):
         # XXX Check if we have unsaved projects
-        if any(p.has_unsaved_changes() for p in self.notebook.get_children()):
+        if any(p.has_unsaved_changes for p in self.notebook.get_children()):
             print 'Quitting with unsaved changes!'
+            for p in self.notebook.get_children():
+                if p.has_unsaved_changes: print p
         gtk.main_quit()
 
     def __init__(self, argv = None, **kwds):
@@ -42,11 +44,8 @@ class TopLevel(gtk.Window):
         main_vbox.pack_end(self.statusbar, expand=False)
         self.show_all()
 
-        for f in argv[1:]:
-            self.commandline_open(f)
-        if self.notebook.get_n_pages() == 0:
-            panel = splash.Panel(toplevel=self)
-            self.notebook.append_page(panel, panel.label)
+        for f in argv[1:]: self.commandline_open(f)
+        if self.notebook.get_n_pages() == 0: self.append_panel(splash.Panel)
         self.show_all()
 
     def commandline_open(self, path):
@@ -54,13 +53,18 @@ class TopLevel(gtk.Window):
         if mode is None: return
         self.append_panel(lambda **kwds:mode[1](path=path, **kwds))
 
-    def append_panel(self, panel_ctor):
-        panel = panel_ctor(toplevel=self)
+    def append_panel(self, panel_or_ctor):
+        panel = panel_or_ctor(toplevel=self) if callable(panel_or_ctor) else panel_or_ctor
         nidx = self.notebook.append_page(panel, panel.label)
         self.notebook.set_current_page(nidx)
         self.notebook.show_all()
         self.show_all()
         return True
+
+    def switch_to(self, panel):
+        self.notebook.set_current_page(self.notebook.page_num(panel))
+        self.notebook.show_all()
+        self.show_all()
 
     def replace_panel(self, old_panel, new_panel):
         idx = self.notebook.page_num(old_panel)

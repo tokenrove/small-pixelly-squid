@@ -1,10 +1,10 @@
 import gtk, re
 
-from interface import modes
+from interface import modes, panel
 
-class Panel(gtk.VBox):
+class Panel(panel.Panel):
     def __init__(self, toplevel=None, **kwds):
-        gtk.VBox.__init__(self, False, 1)
+        panel.Panel.__init__(self)
         self.label = gtk.Label('Open..')
         self.toplevel = toplevel
 
@@ -80,4 +80,4 @@ class Panel(gtk.VBox):
                 chooser.set_preview_widget(preview)
                 chooser.set_preview_widget_active(True)
 
-    def has_unsaved_changes(self): return False
+    has_unsaved_changes = False

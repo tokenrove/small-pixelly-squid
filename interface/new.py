@@ -9,9 +9,10 @@ def populate_model_from_dict(m, d, parent=None):
         if type(v) is dict:
             populate_model_from_dict(m, v, i)
 
-class Panel(gtk.VBox):
+from interface import panel
+class Panel(panel.Panel):
     def __init__(self, toplevel = None, **kwds):
-        gtk.VBox.__init__(self, False, 1)
+        panel.Panel.__init__(self)
         self.label = gtk.Label('New..')
         self.toplevel = toplevel
 
@@ -60,5 +61,5 @@ class Panel(gtk.VBox):
         self.activate_ok_button(on_ok)
         self.show_all()
 
-    def has_unsaved_changes(self): return False
+    has_unsaved_changes = False
 

@@ -1,7 +1,9 @@
 
-class Model():
+from interface import model
+
+class Model(model.Model):
     def __init__(self, dimensions=(1,1), grid_size=(1,1), **kwds):
-        self.is_saved = True
+        model.Model.__init__(self, **kwds)
         self.dimensions, self.grid_size = dimensions, grid_size
 
     # classmethod load unimplemented

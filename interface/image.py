@@ -1,11 +1,14 @@
 import gtk, goocanvas, os
 
-class Model():
-    def __init__(self, path=None, dimensions=(1,1), **kwds):
+from interface import model
+
+class Model(model.Model):
+    def __init__(self, name=None, path=None, dimensions=(1,1), **kwds):
+        model.Model.__init__(self, **kwds)
         self.path = path
         self.dimensions = dimensions
-        self.name = '*unnamed*' if path is None else os.path.basename(path)
-        self.is_saved = True
+        self.name = name
+        if self.name is None: self.name = '*unnamed*' if path is None else os.path.basename(path)
         if path is not None:
             self.pixbuf = gtk.gdk.pixbuf_new_from_file(path)
             self.dimensions = (self.pixbuf.get_width(), self.pixbuf.get_height())
@@ -13,9 +16,10 @@ class Model():
             self.pixbuf = gtk.gdk.Pixbuf(gtk.gdk.COLORSPACE_RGB, True, 8, dimensions[0], dimensions[1])
 
 
-class Panel(gtk.VBox):
+from interface import panel
+class Panel(panel.Panel):
     def __init__(self, toplevel=None, model=None, **kwds):
-        gtk.VBox.__init__(self, False, 0)
+        panel.Panel.__init__(self)
         self.toplevel = toplevel
         self.model = model
         self.label = gtk.Label(model.name)
@@ -52,7 +56,7 @@ class Panel(gtk.VBox):
         widget.window.draw_pixbuf(None, self.model.pixbuf, x, y, x, y, w, h)
         return False
 
-    def has_unsaved_changes(self): return not self.model.is_saved
+    has_unsaved_changes = property(lambda self: self.model.has_unsaved_changes)
 
 import re
 def autodetect(path):

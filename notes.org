@@ -48,7 +48,7 @@
     transparency/alternate selection perhaps
 - [ ] right click for context menu
 
-- [ ] abstract models out from panels
+- [X] abstract models out from panels
   - mode functions are responsible for pairing together models and
     panels
   - new_options_fn creates a model based on the given options, then
@@ -61,7 +61,8 @@
       (when does this happen?)
 - [ ] implement unsaved confirmation
 
-- [ ] restructure imports so we use packages correctly
+- [X] restructure imports so we use packages correctly
+- [X] implement berzerk room sub-edit via own tracked panels
 
 
 Generic model:
@@ -96,3 +97,5 @@ level = {
 * Wishlist
 - [ ] Hints for autodetect routine on how expensive a predicate is;
   sort autodetect list by estimated predicate cost
+- [ ] open routine should search panels for panel with same path
+  already open, switch to that panel instead

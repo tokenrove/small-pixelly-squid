@@ -1,20 +1,11 @@
 
 import gtk, goocanvas, os, operator, array
 
-# class Model():
-#     def __init__(self, **kwds): pass
-#     @classmethod
-#     def load(cls, path): pass
-#     def save(self): pass
-#     @property
-#     is_saved = lambda self: return True
-
 from interface import rastermap
 
 class GenericModel(rastermap.Model):
     def __init__(self, map=None, slab_path=None, **kwds):
         rastermap.Model.__init__(self, **kwds)
-        self.name = '*unnamed*'
         self.slab_path = slab_path
         if self.slab_path is not None:
             self.slab = gtk.gdk.pixbuf_new_from_file(self.slab_path)
@@ -32,17 +23,18 @@ class GenericModel(rastermap.Model):
 
     @classmethod
     def load(cls, path):
+        # XXX wrong, bad, etc
         it = cls()
         return it
 
     def save(self):
-        self.is_saved = True
+        self.has_unsaved_changes = False
         pass
 
-
-class Panel(gtk.VBox):
+from interface import panel
+class Panel(panel.Panel):
     def __init__(self, toplevel=None, model=None, **kwds):
-        gtk.VBox.__init__(self, False, 0)
+        panel.Panel.__init__(self)
         self.toplevel = toplevel
         self.model = model
         self.label = gtk.Label(model.name)
@@ -111,14 +103,15 @@ class Panel(gtk.VBox):
             return False
 
         root = self.canvas.get_root_item()
-        (path,_) = self.palette.get_cursor() or (0,None)
+        (path,_) = self.palette.get_cursor() or ((0,),None)
         model = self.palette.get_model()
         pix = model.get_value(model.get_iter(path), 0)
         self.model.map[y*self.model.dimensions[0]+x] = path[0]
+        self.model.has_unsaved_changes = True
         self.map[y][x].set_property('pixbuf', pix)
         return True
 
-    def has_unsaved_changes(self): return not self.model.is_saved
+    has_unsaved_changes = property(lambda self: self.model.has_unsaved_changes)
 
 def generic_tilemap_new_panel_options():
     vbox = gtk.VBox()
@@ -191,7 +184,7 @@ def generic_tilemap_new_panel_options():
 
     def ctor(**kwds):
         if tabula_rasa_btn.get_active():
-            model = GenericModel(dimensions=(int(w.get_text()), int(h.get_text())), grid_size=(int(tw.get_text()), int(th.get_text())), slab_path='slab.png')
+            model = GenericModel(dimensions=(int(w.get_text()), int(h.get_text())), grid_size=(int(tw.get_text()), int(th.get_text())))
         else:
             print 'mortimer not ready.'
             assert False

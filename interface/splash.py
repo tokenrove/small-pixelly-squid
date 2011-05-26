@@ -3,7 +3,8 @@ import gtk
 
 import interface.new, interface.open
 
-class Panel(gtk.VBox):
+from interface import panel
+class Panel(panel.Panel):
     label = gtk.Label('Splash Screen')
     splash_text = '''<b>Small Pixelly Squid</b> v0
 
@@ -12,8 +13,8 @@ Julian Squires &lt;julian@cipht.net&gt; / 2011
 Not much to see here yet...'''
 
     def __init__(self, toplevel=None, **kwds):
+        panel.Panel.__init__(self)
         self.toplevel = toplevel
-        gtk.VBox.__init__(self, False, 5)
         label = gtk.Label(Panel.splash_text)
         label.set_use_markup(True)
         self.pack_start(label)
@@ -38,7 +39,7 @@ Not much to see here yet...'''
         buttons.set_layout(gtk.BUTTONBOX_END)
         for (l,s,fn) in (('New..', gtk.STOCK_NEW, self.on_new),
                         ('Open..', gtk.STOCK_OPEN, self.on_open),
-                        ('Quit', gtk.STOCK_QUIT, self.on_quit)):
+                        ('Quit', gtk.STOCK_QUIT, self.toplevel.quit_request)):
             b = gtk.Button(l, s)
             b.connect('clicked', fn)
             buttons.pack_end(b, padding=2)
@@ -54,7 +55,4 @@ Not much to see here yet...'''
     def on_open(self, *args):
         self.toplevel.replace_panel(self, interface.open.Panel(toplevel=self.toplevel))
 
-    def on_quit(self, *args):
-        self.toplevel.quit_request()
-
-    def has_unsaved_changes(self): return False
+    has_unsaved_changes = False

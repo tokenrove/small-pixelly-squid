@@ -1,11 +1,13 @@
 import gtk, goocanvas
 import re, cPickle, os
 
-class LevelModel():
-    def __init__(self, path=None, rooms=None, **kwds):
-        self.is_saved = True
-        self.name = '*unnamed*' if path is None else os.path.basename(path)
-        self.rooms = rooms
+from interface import model
+
+class LevelModel(model.Model):
+    def __init__(self, name=None, path=None, rooms=None, **kwds):
+        model.Model.__init__(self, **kwds)
+        self.path, self.name, self.rooms = path, name, rooms
+        if self.name is None: self.name = '*unnamed*' if path is None else os.path.basename(path)
         if self.rooms == None: self.rooms = []
 
     @classmethod
@@ -22,16 +24,40 @@ class LevelModel():
         try:
             with open(path, "w") as f:
                 cPickle.dump({'magic':'Berzerk', 'rooms':self.rooms}, f)
-            self.is_saved = True
+            self.has_unsaved_changes = False
         except IOError: return
 
+from interface import tilemap
 
-class Panel(gtk.VBox):
+class RoomModel(tilemap.GenericModel):
+    def __init__(self, parent=None, id=None, **kwds):
+        tilemap.GenericModel.__init__(self, **kwds)
+        self.parent = parent
+        self.id = id
+
+    @classmethod
+    def from_room(cls, parent, id):
+        room = parent.rooms[id]
+        name = '%s [%d]' % (parent.name,id)
+        return cls(name=name, parent=parent, id=id,
+                   dimensions=room['dim'], grid_size=(16,16), map=room['map'],
+                   slab_path=os.path.join(os.path.dirname(parent.path), room['slab']))
+
+    def save(self): self.parent.save()
+
+    def _propagate_unsaved_changes(self, v):
+        if v is False: self.parent.has_unsaved_changes = v
+    has_unsaved_changes = property(lambda self:self.parent.has_unsaved_changes,
+                                   _propagate_unsaved_changes)
+
+from interface import panel
+class Panel(panel.Panel):
     def __init__(self, toplevel=None, model=None, **kwds):
-        gtk.VBox.__init__(self, False, 0)
+        panel.Panel.__init__(self)
         self.toplevel = toplevel
         self.model = model
         self.label = gtk.Label(model.name)
+        self.subpanels = []
 
         hpane = gtk.HPaned()
         sw = gtk.ScrolledWindow()
@@ -49,8 +75,7 @@ class Panel(gtk.VBox):
         sw = gtk.ScrolledWindow()
         sw.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
         room_model = gtk.ListStore(int, object)
-        for i,r in enumerate(model.rooms):
-            room_model.append([i,r])
+        for i,r in enumerate(model.rooms): room_model.append([i,r])
         self.room_list = gtk.TreeView(room_model)
         def fn(column, cell, model, iter):
             cell.set_property('text', str(model.get_value(iter, 0)))
@@ -97,18 +122,26 @@ class Panel(gtk.VBox):
         (path,_) = self.room_list.get_cursor()
         model = self.room_list.get_model()
         (id,room) = model.get(model.get_iter(path), 0, 1)
-        print 'going to edit room %s' % room
-        ## here's where buffer management would come in handy...
-        buf = self.toplevel.find_buffer([self.path, 'room %d' % id])
-        if buf is None:
-            self.toplevel.append_panel(tilemap.Panel(map=room))
+        for r in self.subpanels:
+            print r.model.id
+
+        for panel in self.subpanels:
+            if isinstance(panel.model, RoomModel) and panel.model.id == id:
+                self.toplevel.switch_to(panel)
+                return
+
+        model = RoomModel.from_room(parent=self.model, id=id)
+        self.subpanels.append(tilemap.Panel(model=model, toplevel=self.toplevel))
+        self.toplevel.append_panel(self.subpanels[-1])
 
     def on_room_cursor_changed(self, widget):
         (path,column) = widget.get_cursor()
         for b in self.item_buttons:
             b.set_sensitive(path is not None)
 
-    def has_unsaved_changes(self): return not self.model.is_saved
+    @property
+    def has_unsaved_changes(self):
+        return self.model.has_unsaved_changes or any(x.has_unsaved_changes for x in self.subpanels)
 
 
 def autodetect(path):
