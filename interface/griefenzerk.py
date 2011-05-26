@@ -1,4 +1,4 @@
-import gtk, goocanvas
+import gtk
 import editor.griefenzerk
 from interface import panel, tilemap
 
@@ -13,12 +13,8 @@ class Panel(panel.Panel):
         hpane = gtk.HPaned()
         sw = gtk.ScrolledWindow()
         sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        self.canvas = goocanvas.Canvas()
-        grid = goocanvas.Grid(parent=self.canvas.get_root_item(),
-                              line_width=0.5,
-                              line_dash=goocanvas.LineDash([4.0, 4.0]),
-                              width=1500, height=1500, x_step=20*16, y_step=13*16)
-        sw.add(self.canvas)
+        self.canvas = gtk.DrawingArea()
+        sw.add_with_viewport(self.canvas)
         hpane.pack1(sw, resize=True, shrink=False)
         # room list
         vpane = gtk.VPaned()

@@ -1,4 +1,4 @@
-import gtk, goocanvas
+import gtk
 import editor.image
 from interface import panel, form
 
@@ -22,12 +22,8 @@ class Panel(panel.Panel):
         hpane.pack1(sw, resize=True, shrink=False)
         palette_w = gtk.ScrolledWindow()
         palette_w.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        self.palette = goocanvas.Canvas()
-        grid = goocanvas.Grid(parent=self.palette.get_root_item(),
-                              line_width=0.5,
-                              line_dash=goocanvas.LineDash([4.0, 4.0]),
-                              width=128, height=256, x_step=16, y_step=16)
-        palette_w.add(self.palette)
+        self.palette = gtk.Label('color palette here...')
+        palette_w.add_with_viewport(self.palette)
         hpane.pack2(palette_w, resize=True, shrink=True)
 
         hpane.show()

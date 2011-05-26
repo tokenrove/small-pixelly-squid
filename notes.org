@@ -19,7 +19,9 @@
 - [ ] game-independent map editor mode
   - [ ] mortimer from PNG
   - [ ] blank slate
-- [ ] old Animosity format
+- [X] old Animosity format
+- [X] switch tilemap presentation to generate a pixbuf instead of
+  using goocanvas.Image -- it's too slow for a large map
 
 
 - [X] new panel calls mode.NewPanelOptions which is linked with OK
@@ -121,3 +123,4 @@ level = {
   already open, switch to that panel instead
 - [ ] panels with unsaved changes should have their labels shown differently
 - [ ] system for key binding for menus
+- [ ] generate and cache previews for tilemaps and so on
