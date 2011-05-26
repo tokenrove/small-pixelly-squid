@@ -78,8 +78,8 @@ class TopLevel(gtk.Window):
         return True
 
     def on_key_press(self, widget, event):
-        ## Handle root menu
         if event.keyval != ord('f'): return False
+        if not self.file_menu: return False
         menu = pie.Menu(self.file_menu)
         (x,y,_) = widget.window.get_pointer()
         menu.popup(x,y)

@@ -1,6 +1,6 @@
 import gtk, goocanvas
 import editor.image
-from interface import panel
+from interface import panel, form
 
 class Panel(panel.Panel):
     def __init__(self, toplevel=None, model=None, **kwds):
@@ -44,22 +44,8 @@ class Panel(panel.Panel):
     has_unsaved_changes = property(lambda self: self.model.has_unsaved_changes)
 
 def new_options():
-    vbox = gtk.VBox()
-
-    hbox = gtk.HBox()
-    hbox.pack_start(gtk.Label('Dimensions'), expand=False)
-    h = gtk.Entry(max=5)
-    h.set_width_chars(4)
-    h.set_text('256')
-    hbox.pack_end(h, expand=False)
-    hbox.pack_end(gtk.Label('x'), expand=False)
-    w = gtk.Entry(max=5)
-    w.set_width_chars(4)
-    w.set_text('256')
-    hbox.pack_end(w, expand=False)
-    vbox.pack_start(hbox, expand=False)
-
-    return (vbox, lambda **kwds:Panel(model=editor.image.Model(dimensions=(int(w.get_text()), int(h.get_text()))), **kwds))
+    (f,results) = form.make([('Dimensions', (256,256))])
+    return (f, lambda **kwds:Panel(model=editor.image.Model(dimensions=results['Dimensions']), **kwds))
 
 def preview_fn(path):
     try:

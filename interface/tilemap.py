@@ -1,6 +1,6 @@
 import gtk, goocanvas
 import editor.tilemap
-from interface import panel
+from interface import panel, form
 
 class Panel(panel.Panel):
     def __init__(self, toplevel=None, model=None, **kwds):
@@ -89,35 +89,10 @@ def generic_tilemap_new_panel_options():
     outer_hbox = gtk.HBox(False, 5)
     tabula_rasa_btn = gtk.RadioButton()
     outer_hbox.pack_start(tabula_rasa_btn, expand=False)
-
     tabula_frame = gtk.Frame('Tabula Rasa')
-    inner_vbox = gtk.VBox()
-    hbox = gtk.HBox()
-    hbox.pack_start(gtk.Label('Room dimensions'), expand=False)
-    h = gtk.Entry(max=4)
-    h.set_width_chars(2)
-    h.set_text('13')
-    hbox.pack_end(h, expand=False)
-    hbox.pack_end(gtk.Label('x'), expand=False)
-    w = gtk.Entry(max=4)
-    w.set_width_chars(2)
-    w.set_text('20')
-    hbox.pack_end(w, expand=False)
-    inner_vbox.pack_start(hbox, expand=False)
-
-    hbox = gtk.HBox()
-    hbox.pack_start(gtk.Label('Tile size'), expand=False)
-    th = gtk.Entry(3)
-    th.set_width_chars(2)
-    th.set_text('16')
-    hbox.pack_end(th, expand=False)
-    hbox.pack_end(gtk.Label('x'), expand=False)
-    tw = gtk.Entry(3)
-    tw.set_width_chars(2)
-    tw.set_text('16')
-    hbox.pack_end(tw, expand=False)
-    inner_vbox.pack_start(hbox, expand=False)
-    tabula_frame.add(inner_vbox)
+    (f,tabula) = form.make([('Room dimensions', (20,13)),
+                            ('Tile size', (16,16))])
+    tabula_frame.add(f)
     outer_hbox.pack_start(tabula_frame)
     vbox.pack_start(outer_hbox, expand=False)
     tabula_rasa_btn.connect('toggled', lambda w:tabula_frame.set_sensitive(w.get_active()))
@@ -125,28 +100,10 @@ def generic_tilemap_new_panel_options():
     outer_hbox = gtk.HBox(False, 5)
     mortimer_btn = gtk.RadioButton(tabula_rasa_btn)
     outer_hbox.pack_start(mortimer_btn, expand=False)
-
-    # (frame "Mortimer" (vbox (hbox (label "Tile size") (entry "16" :width-chars 2) (label "x") (entry "16" :width-chars 2)) (hbox (label "Source image") (file-chooser-button "Select an image to mortimer"))))
     mortimer_frame = gtk.Frame('Mortimer')
-    inner_vbox = gtk.VBox()
-    hbox = gtk.HBox()
-    hbox.pack_start(gtk.Label('Tile size'), expand=False)
-    th = gtk.Entry(3)
-    th.set_width_chars(2)
-    th.set_text('16')
-    hbox.pack_end(th, expand=False)
-    hbox.pack_end(gtk.Label('x'), expand=False)
-    tw = gtk.Entry(3)
-    tw.set_width_chars(2)
-    tw.set_text('16')
-    hbox.pack_end(tw, expand=False)
-    inner_vbox.pack_start(hbox, expand=False)
-    hbox = gtk.HBox()
-    hbox.pack_start(gtk.Label('Source image'), expand=False)
-    chooser_btn = gtk.FileChooserButton('Select an image to mortimer')
-    hbox.pack_end(chooser_btn, expand=False)
-    inner_vbox.pack_start(hbox, expand=False)
-    mortimer_frame.add(inner_vbox)
+    (f,mortimer) = form.make([('Tile size', (16,16)),
+                              ('Source image', gtk.FileChooserButton('Select image to mortimer'))])
+    mortimer_frame.add(f)
     outer_hbox.pack_start(mortimer_frame)
     vbox.pack_start(outer_hbox, expand=False)
     mortimer_btn.connect('toggled', lambda w:mortimer_frame.set_sensitive(w.get_active()))
@@ -154,8 +111,9 @@ def generic_tilemap_new_panel_options():
 
     def ctor(**kwds):
         if tabula_rasa_btn.get_active():
-            model = editor.tilemap.GenericModel(dimensions=(int(w.get_text()), int(h.get_text())), grid_size=(int(tw.get_text()), int(th.get_text())))
+            model = editor.tilemap.GenericModel(dimensions=tabula['Room dimensions'], grid_size=tabula['Tile size'])
         else:
+            print 'gonna mortimer: %s at %s' % (mortimer['Source image'].get_filename(), mortimer['Tile size'])
             print 'mortimer not ready.'
             assert False
         return Panel(model=model, **kwds)

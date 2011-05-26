@@ -63,6 +63,10 @@
 
 - [ ] separate out tilemap presentation from tilemap editing and
   panel:
+  - [ ] presentations as a tool for building panels:
+    - [ ] map presentation as an easy widget to throw on, separate
+      from panel
+    - [ ] palette presentation separate from panel
   - [ ] edit operations occur on editor side, interface side registers
     as a listener for changes
   - [ ] on changes, presentation is updated
@@ -79,7 +83,7 @@
 - [X] restructure imports so we use packages correctly
 - [X] implement berzerk room sub-edit via own tracked panels
 
-- [ ] write some utility functions for boring form code
+- [X] write some utility functions for boring form code
 
 Generic model:
   name : str
@@ -116,3 +120,4 @@ level = {
 - [ ] open routine should search panels for panel with same path
   already open, switch to that panel instead
 - [ ] panels with unsaved changes should have their labels shown differently
+- [ ] system for key binding for menus
