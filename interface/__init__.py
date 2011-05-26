@@ -1,13 +1,13 @@
 
 import gtk, sys
 
-import modes
+from interface import modes
 # base modes
-import tilemap, image
+from interface import tilemap, image
 # project-specific modes
-import griefenzerk, animosity
+from interface import griefenzerk, animosity
 
-import toplevel
+from interface import toplevel
 def main():
     toplevel.TopLevel(argv = sys.argv)
     gtk.main()

@@ -1,6 +1,6 @@
 import gtk, re
 
-import modes
+from interface import modes
 
 class Panel(gtk.VBox):
     def __init__(self, toplevel=None, **kwds):
@@ -79,3 +79,5 @@ class Panel(gtk.VBox):
             if preview is not None:
                 chooser.set_preview_widget(preview)
                 chooser.set_preview_widget_active(True)
+
+    def has_unsaved_changes(self): return False

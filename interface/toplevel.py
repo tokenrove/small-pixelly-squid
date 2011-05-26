@@ -1,8 +1,8 @@
 
 import gtk
-import pie
 
-import tilemap, splash, util, new, open, modes
+from interface import pie, splash, modes
+import interface.open, interface.new
 
 class TopLevel(gtk.Window):
     """Main application window that hosts panels."""
@@ -13,6 +13,8 @@ class TopLevel(gtk.Window):
 
     def quit_request(self, *args):
         # XXX Check if we have unsaved projects
+        if any(p.has_unsaved_changes() for p in self.notebook.get_children()):
+            print 'Quitting with unsaved changes!'
         gtk.main_quit()
 
     def __init__(self, argv = None, **kwds):
@@ -71,9 +73,9 @@ class TopLevel(gtk.Window):
     def on_key_press(self, widget, event):
         ## Handle root menu
         if event.keyval != ord('f'): return False
-        menu = pie.Menu([('New',lambda:self.append_panel(new.Panel)),
-                         ('Open',lambda:self.append_panel(open.Panel)),
-                         ('Quit',gtk.main_quit)])
+        menu = pie.Menu([('New',lambda:self.append_panel(interface.new.Panel)),
+                         ('Open',lambda:self.append_panel(interface.open.Panel)),
+                         ('Quit',self.quit_request)])
         (x,y,_) = widget.window.get_pointer()
         menu.popup(x,y)
         return True

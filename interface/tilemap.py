@@ -1,14 +1,51 @@
 
-import gtk, goocanvas, os
+import gtk, goocanvas, os, operator, array
+
+# class Model():
+#     def __init__(self, **kwds): pass
+#     @classmethod
+#     def load(cls, path): pass
+#     def save(self): pass
+#     @property
+#     is_saved = lambda self: return True
+
+from interface import rastermap
+
+class GenericModel(rastermap.Model):
+    def __init__(self, map=None, slab_path=None, **kwds):
+        rastermap.Model.__init__(self, **kwds)
+        self.name = '*unnamed*'
+        self.slab_path = slab_path
+        if self.slab_path is not None:
+            self.slab = gtk.gdk.pixbuf_new_from_file(self.slab_path)
+        else:
+            self.slab = gtk.gdk.Pixbuf(gtk.gdk.COLORSPACE_RGB, False, 8, 256, self.grid_size[1])
+
+        self.map = map
+        if self.map is None:
+            self.map = array.array('i', [0]*reduce(operator.mul, self.dimensions))
+
+        def extract_tile(n):
+            return self.slab.subpixbuf(n*self.grid_size[0], 0, self.grid_size[0], self.grid_size[1])
+        zero = extract_tile(0)
+        self.palette = [extract_tile(x) for x in range(0,self.slab.get_width()/self.grid_size[0])]
+
+    @classmethod
+    def load(cls, path):
+        it = cls()
+        return it
+
+    def save(self):
+        self.is_saved = True
+        pass
 
 
 class Panel(gtk.VBox):
-    def __init__(self, toplevel=None, path=None, dimensions=(1,1), tile_size=(8,8), **kwds):
+    def __init__(self, toplevel=None, model=None, **kwds):
         gtk.VBox.__init__(self, False, 0)
         self.toplevel = toplevel
-        self.path = path
-        self.label = gtk.Label('*unnamed*' if path is None else os.path.basename(path))
-        self.dimensions, self.tile_size = dimensions, tile_size
+        self.model = model
+        self.label = gtk.Label(model.name)
 
         ## example
         hpane = gtk.HPaned()
@@ -25,18 +62,18 @@ class Panel(gtk.VBox):
         grid = goocanvas.Grid(parent=root,
                               line_width=0.5,
                               line_dash=goocanvas.LineDash([0.0, 2.0, 2.0, 2.0]),
-                              width=dimensions[0]*tile_size[0], height=dimensions[1]*tile_size[1], x_step=tile_size[0], y_step=tile_size[1])
+                              width=model.width, height=model.height, x_step=model.grid_size[0], y_step=model.grid_size[1])
         grid.props.visibility = goocanvas.ITEM_HIDDEN
-        self.canvas.set_bounds(0,0, dimensions[0]*tile_size[0], dimensions[1]*tile_size[1])
+        self.canvas.set_bounds(0,0, model.width, model.height)
         #root.animate(0,0, 16, 0, 0, 5000, 40, goocanvas.ANIMATE_BOUNCE)
         sw.add(self.canvas)
         hpane.pack1(sw, resize=True, shrink=False)
 
-        self.slab = gtk.gdk.pixbuf_new_from_file('slab.png')
-
         palette_w = gtk.ScrolledWindow()
         palette_w.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         ls = gtk.ListStore(gtk.gdk.Pixbuf)
+        for e in model.palette:
+            ls.append([e])
         self.palette = palette = gtk.IconView(ls)
         palette.set_size_request(100, 100)
         palette.set_pixbuf_column(0)
@@ -44,18 +81,15 @@ class Panel(gtk.VBox):
         palette.set_selection_mode(gtk.SELECTION_MULTIPLE)
         palette.set_property('column-spacing', 0)
         palette.set_property('item-padding', 2)
-        zero = self.slab.subpixbuf(0, 0, tile_size[0], tile_size[1])
-        for x in range(0,self.slab.get_width()/tile_size[0]):
-            ls.append([self.slab.subpixbuf(x*tile_size[0], 0, tile_size[0], tile_size[1])])
         palette_w.add(palette)
         hpane.pack2(palette_w, resize=True, shrink=True)
         ##
 
         self.map = []
-        for i in range(dimensions[1]):
+        for i in range(model.dimensions[1]):
             self.map.insert(i, [])
-            for j in range(dimensions[0]):
-                self.map[i].insert(j, goocanvas.Image(parent=table, pixbuf=zero))
+            for j in range(model.dimensions[0]):
+                self.map[i].insert(j, goocanvas.Image(parent=table, pixbuf=model.palette[model.map[i*model.dimensions[0]+j]]))
                 table.set_child_properties(self.map[i][j], row=i, column=j)
 
         hpane.show()
@@ -72,16 +106,19 @@ class Panel(gtk.VBox):
         return self.apply_current_tool(event.x, event.y)
 
     def apply_current_tool(self, x, y):
-        if (x < 0 or x > self.dimensions[0]*self.tile_size[0] or y < 0 or y > self.dimensions[1]*self.tile_size[1]):
+        (x,y) = (int(x)/self.model.grid_size[0], int(y)/self.model.grid_size[1])
+        if (x < 0 or x >= self.model.dimensions[0] or y < 0 or y >= self.model.dimensions[1]):
             return False
 
         root = self.canvas.get_root_item()
         (path,_) = self.palette.get_cursor() or (0,None)
         model = self.palette.get_model()
         pix = model.get_value(model.get_iter(path), 0)
-        self.map[int(y)/self.tile_size[1]][int(x)/self.tile_size[0]].set_property('pixbuf', pix)
+        self.model.map[y*self.model.dimensions[0]+x] = path[0]
+        self.map[y][x].set_property('pixbuf', pix)
         return True
 
+    def has_unsaved_changes(self): return not self.model.is_saved
 
 def generic_tilemap_new_panel_options():
     vbox = gtk.VBox()
@@ -152,11 +189,19 @@ def generic_tilemap_new_panel_options():
     mortimer_btn.connect('toggled', lambda w:mortimer_frame.set_sensitive(w.get_active()))
     mortimer_frame.set_sensitive(False)
 
-    return (vbox, lambda **kwds:Panel(dimensions=(int(w.get_text()), int(h.get_text())), tile_size=(int(tw.get_text()), int(th.get_text())), **kwds))
+    def ctor(**kwds):
+        if tabula_rasa_btn.get_active():
+            model = GenericModel(dimensions=(int(w.get_text()), int(h.get_text())), grid_size=(int(tw.get_text()), int(th.get_text())), slab_path='slab.png')
+        else:
+            print 'mortimer not ready.'
+            assert False
+        return Panel(model=model, **kwds)
+    return (vbox, ctor)
 
 import re
 def autodetect(path):
-    return re.search(r'(?i)\.map$', path) is not None
+    return re.match(r'(?i)\.map$', os.path.splitext(path)[1]) is not None
 
-import modes
-modes.register(['Tilemap'], generic_tilemap_new_panel_options, autodetect, Panel, None)
+from interface import modes
+modes.register(['Tilemap'], generic_tilemap_new_panel_options, autodetect,
+               lambda path=None,**kwds:Panel(model=Model.load(path),**kwds), None)

@@ -1,7 +1,13 @@
 
 import gtk
 
-import util, tilemap, modes
+from interface import tilemap, modes
+
+def populate_model_from_dict(m, d, parent=None):
+    for (k,v) in d.items():
+        i = m.append(parent, [k,None if type(v) is dict else v])
+        if type(v) is dict:
+            populate_model_from_dict(m, v, i)
 
 class Panel(gtk.VBox):
     def __init__(self, toplevel = None, **kwds):
@@ -12,7 +18,7 @@ class Panel(gtk.VBox):
         hbox = gtk.HBox(False, 1)
         hbox.pack_start(gtk.Label('Select project type:'), expand=False)
         model = gtk.TreeStore(str, object)
-        util.populate_model_from_dict(model, modes.table)
+        populate_model_from_dict(model, modes.table)
         self.type_select = gtk.ComboBox(model)
         cell = gtk.CellRendererText()
         self.type_select.pack_start(cell, True)
@@ -53,4 +59,6 @@ class Panel(gtk.VBox):
         self.options_form.add_with_viewport(widget)
         self.activate_ok_button(on_ok)
         self.show_all()
+
+    def has_unsaved_changes(self): return False
 

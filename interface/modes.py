@@ -1,6 +1,5 @@
 
 import gtk
-import util
 
 def no_options(constructor):
     return lambda: (gtk.Label('This mode has no pre-creation options.'), constructor)

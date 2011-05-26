@@ -1,22 +1,30 @@
 import gtk, goocanvas, os
 
+class Model():
+    def __init__(self, path=None, dimensions=(1,1), **kwds):
+        self.path = path
+        self.dimensions = dimensions
+        self.name = '*unnamed*' if path is None else os.path.basename(path)
+        self.is_saved = True
+        if path is not None:
+            self.pixbuf = gtk.gdk.pixbuf_new_from_file(path)
+            self.dimensions = (self.pixbuf.get_width(), self.pixbuf.get_height())
+        else:
+            self.pixbuf = gtk.gdk.Pixbuf(gtk.gdk.COLORSPACE_RGB, True, 8, dimensions[0], dimensions[1])
+
+
 class Panel(gtk.VBox):
-    def __init__(self, toplevel=None, path=None, dimensions=(1,1), **kwds):
+    def __init__(self, toplevel=None, model=None, **kwds):
         gtk.VBox.__init__(self, False, 0)
         self.toplevel = toplevel
-        self.dimensions = dimensions
-        self.path = path
-        self.label = gtk.Label('*unnamed*' if path is None else os.path.basename(path))
+        self.model = model
+        self.label = gtk.Label(model.name)
 
         hpane = gtk.HPaned()
         sw = gtk.ScrolledWindow()
         sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         self.area = gtk.DrawingArea()
-        self.area.set_size_request(*dimensions)
-        if path is not None:
-            self.pixbuf = gtk.gdk.pixbuf_new_from_file(path)
-        else:
-            self.pixbuf = gtk.gdk.Pixbuf(gtk.gdk.COLORSPACE_RGB, True, 8, dimensions[0], dimensions[1])
+        self.area.set_size_request(*model.dimensions)
 
         self.area.connect('expose_event', self.on_expose)
         mask = gtk.gdk.EXPOSURE_MASK
@@ -39,14 +47,16 @@ class Panel(gtk.VBox):
 
     def on_expose(self, widget, event):
         x,y,w,h = event.area
-        w = min(w, self.pixbuf.get_width())
-        h = min(h, self.pixbuf.get_height())
-        widget.window.draw_pixbuf(None, self.pixbuf, x, y, x, y, w, h)
+        w = min(w, self.model.pixbuf.get_width())
+        h = min(h, self.model.pixbuf.get_height())
+        widget.window.draw_pixbuf(None, self.model.pixbuf, x, y, x, y, w, h)
         return False
+
+    def has_unsaved_changes(self): return not self.model.is_saved
 
 import re
 def autodetect(path):
-    return re.search(r'(?i)\.png$', path) is not None
+    return re.match(r'(?i)\.png$', os.path.splitext(path)[1]) is not None
 
 
 def new_options():
@@ -65,7 +75,7 @@ def new_options():
     hbox.pack_end(w, expand=False)
     vbox.pack_start(hbox, expand=False)
 
-    return (vbox, lambda **kwds:Panel(dimensions=(int(w.get_text()), int(h.get_text())), **kwds))
+    return (vbox, lambda **kwds:Panel(model=Model(dimensions=(int(w.get_text()), int(h.get_text()))), **kwds))
 
 
 
@@ -78,6 +88,6 @@ def preview_fn(path):
     except:
         return None
 
-import modes
-modes.register(['Image'],
-               new_options, autodetect, Panel, preview_fn)
+from interface import modes
+modes.register(['Image'], new_options, autodetect,
+               lambda path=None, **kwds: Panel(model=Model(path=path)), preview_fn)

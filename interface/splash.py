@@ -1,7 +1,7 @@
 
 import gtk
 
-import new, open, util
+import interface.new, interface.open
 
 class Panel(gtk.VBox):
     label = gtk.Label('Splash Screen')
@@ -49,10 +49,12 @@ Not much to see here yet...'''
         self.show_all()
 
     def on_new(self, *args):
-        self.toplevel.replace_panel(self, new.Panel(toplevel=self.toplevel))
+        self.toplevel.replace_panel(self, interface.new.Panel(toplevel=self.toplevel))
 
     def on_open(self, *args):
-        self.toplevel.replace_panel(self, open.Panel(toplevel=self.toplevel))
+        self.toplevel.replace_panel(self, interface.open.Panel(toplevel=self.toplevel))
 
     def on_quit(self, *args):
         self.toplevel.quit_request()
+
+    def has_unsaved_changes(self): return False
