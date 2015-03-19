@@ -1,4 +1,4 @@
-import re, cPickle, os
+import re, cPickle, os, array
 from editor import model, tilemap
 
 class LevelModel(model.Model):
@@ -24,6 +24,14 @@ class LevelModel(model.Model):
                 cPickle.dump({'magic':'Berzerk', 'rooms':self.rooms}, f)
             self.has_unsaved_changes = False
         except IOError: return
+
+    def add_room(self):
+        self.rooms.append({'map':array.array('i',[0]*20*13),
+                           'dim':(20,13),
+                           'slab':'neutopia-rip-2.png',
+                           'actors':{},
+                           'tile properties':[]
+                           })
 
 class RoomModel(tilemap.GenericModel):
     def __init__(self, parent=None, id=None, **kwds):

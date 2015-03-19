@@ -1,6 +1,6 @@
 import gtk
 import editor.griefenzerk
-from interface import panel, tilemap
+from interface import panel, tilemap, form
 
 class Panel(panel.Panel):
     def __init__(self, toplevel=None, model=None, **kwds):
@@ -36,12 +36,20 @@ class Panel(panel.Panel):
 
         hbox = gtk.HBox(False, 5)
         frame = gtk.Frame('Room Properties')
-        inner_vbox = gtk.VBox()
+        (f,results) = form.make([('Slab', 'room-slab.png'),])
         inner_hbox = gtk.HBox()
-        inner_hbox.pack_start(gtk.Label('Connected to:'))
-        inner_hbox.pack_start(gtk.ComboBox())
-        inner_vbox.pack_start(inner_hbox)
-        frame.add(inner_vbox)
+        inner_hbox.pack_start(gtk.Label('Connected to:'), expand=False, padding=5)
+        cb = gtk.ComboBox(self.room_list.get_model())
+        cell = gtk.CellRendererText()
+        cb.pack_start(cell, True)
+        cb.add_attribute(cell, 'text', 0)
+        inner_hbox.pack_start(cb, expand=False)
+        inner_hbox.pack_start(gtk.Label('via'), expand=False, padding=5)
+        cb = gtk.combo_box_new_text()
+        for s in ['North', 'South', 'East', 'West']: cb.append_text(s)
+        inner_hbox.pack_start(cb, expand=False)
+        f.pack_start(inner_hbox, expand=False)
+        frame.add(f)
         hbox.pack_start(frame)
 
         buttons = gtk.VButtonBox()
@@ -57,13 +65,19 @@ class Panel(panel.Panel):
             self.item_buttons.append(b)
             buttons.pack_start(b)
             b.set_sensitive(False)
-        buttons.pack_end(gtk.Button('Add', gtk.STOCK_ADD))
+        add_btn = gtk.Button('Add', gtk.STOCK_ADD)
+        add_btn.connect('clicked', self.on_add_room)
+        buttons.pack_end(add_btn)
         hbox.pack_end(buttons, expand=False)
         vpane.pack2(hbox)
 
         hpane.show()
         self.add(hpane)
         self.show_all()
+
+    def on_add_room(self, button):
+        self.model.add_room()
+        self.room_list.get_model().append([len(self.model.rooms)-1, self.model.rooms[-1]])
 
     def on_edit_room(self, button):
         (path,_) = self.room_list.get_cursor()

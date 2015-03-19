@@ -29,6 +29,8 @@ class Panel(panel.Panel):
         hpane.show()
         self.add(hpane)
         self.show_all()
+        self.status_id = self.toplevel.statusbar.get_context_id('Image' + model.name)
+        self.toplevel.statusbar.push(self.status_id, 'I recommend using gfx2 for image editing instead.')
 
     def on_expose(self, widget, event):
         x,y,w,h = event.area
@@ -54,4 +56,4 @@ def preview_fn(path):
 
 from interface import modes
 modes.register(['Image'], new_options, editor.image.autodetect,
-               lambda path=None, **kwds: Panel(model=editor.image.Model(path=path)), preview_fn)
+               lambda path=None, **kwds: Panel(model=editor.image.Model(path=path), **kwds), preview_fn)

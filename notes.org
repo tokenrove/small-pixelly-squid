@@ -1,4 +1,8 @@
 
+* Big Questions
+
+What do we want to schedule for a "release candidate"?
+
 * Tasks
 - [X] new leads to new pane with creation wizard
   - [X] berzerk level project:
@@ -19,6 +23,7 @@
 - [ ] game-independent map editor mode
   - [ ] mortimer from PNG
   - [ ] blank slate
+  - [ ] figure out how slab editing should work
 - [X] old Animosity format
 - [X] switch tilemap presentation to generate a pixbuf instead of
   using goocanvas.Image -- it's too slow for a large map
@@ -42,12 +47,13 @@
     - ObjectGrid (effectively draggable tiles)
       - BerzerkLevelLayout
     - Image
-- [ ] generic palette implementation based on goocanvas?
+- [ ] generic palette implementation based on goocanvas? or just cairo
 - [ ] add simple zoom control (popup slider on Z with focus grabbed)
 
 - [ ] modifier keys for drawing behavior:
   - shift/control as concept of remove/add, so paint
     transparency/alternate selection perhaps
+  - shift should snap to straight lines for drawing
 - [ ] right click for context menu
   - [ ] brainstorm places where context should go
 
@@ -78,6 +84,7 @@
 
 - [X] interface for saving changes
 - [ ] berzerk room add
+  - [ ] figure out how to handle adding a room when no slab specified
 - [ ] berzerk room connections edit
 - [ ] berzerk spawn edits
 - [ ] implement unsaved confirmation
@@ -86,6 +93,8 @@
 - [X] implement berzerk room sub-edit via own tracked panels
 
 - [X] write some utility functions for boring form code
+
+- [ ] tool indicators for cursor
 
 Generic model:
   name : str
@@ -124,3 +133,40 @@ level = {
 - [ ] panels with unsaved changes should have their labels shown differently
 - [ ] system for key binding for menus
 - [ ] generate and cache previews for tilemaps and so on
+
+- [ ] determine connectivity graph of tilemap based on tile
+  properties, display walkability overlay, or answer
+  get-here-from-there queries
+
+- [ ] "scale-9" style brush selection... specify a center that gets
+  repeated, while edges are once-only
+- [ ] gravity model of painting based on walkability model
+
+- [ ] when trying to quit the application with unsaved buffers,
+      instead of buffer-by-buffer confirm, present a quit panel with a
+      summary of unsaved buffers, with the ability to save them
+      quickly
+
+- [ ] think about how to make components composable so that new game
+  modes can be written with minimal code burden
+
+- [ ] song synchronization editor:
+  - display/play mp3
+  - allow placing events (either cues or ranges) relative to song
+    position
+  - would be ideal for squid licorice or demos
+
+- [ ] study gimp's display filters implementation to implement
+  limited-color emulation modes, even Atari ST palette shifting modes
+
+- [ ] implement marching ants for selections, transparency; use idle
+  loop as per animations
+
+- sprite sheet mode:
+  - Initially, modifications of sprite-preview:
+    - [ ] show numbered rectangles/grid around sheet
+    - [ ] highlight selected frames for preview
+  - [ ] integrate sprite-preview.py as part of the sprite sheet mode
+  - [ ] animation preview toggleable feature
+  - [ ] possible to import, rearrange, pack sprite sheets, save back
+    to image+metadata (embed sprite anim info in PNG metadata perhaps?)
