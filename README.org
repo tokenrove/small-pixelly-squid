@@ -1,0 +1,6 @@
+
+This was intended to become a level editing tool for Griefenzerk
+(Condostein).
+
+Since the pie menu code is derived from Don Hopkins's implementation,
+which is LGPL'd, this code is also LGPL'd.
